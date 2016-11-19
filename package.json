@@ -1,0 +1,23 @@
+{
+  "name": "cynnamyn",
+  "version": "1.0.0",
+  "description": "Replaces words in real time with synonyms",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/justinpchang/Cynnamyn.git"
+  },
+  "author": "Justin Chang",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/justinpchang/Cynnamyn/issues"
+  },
+  "homepage": "https://github.com/justinpchang/Cynnamyn#readme",
+  "dependencies": {
+    "node-wordnet": "^0.1.12",
+    "wndb-with-exceptions": "^3.0.1"
+  }
+}

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cynnamyn - sound smarter</title>
+    <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+    <script>
+    var socket = io.connect('http://localhost'); // connec to server
+    socket.on('news', function (data) { // listen to news event raised by the server
+        console.log(data);
+        socket.emit('my other event', { my: 'data' }); // raise an event on the server
+    });
+    </script>
+    <script type="text/javascript">
+    var wordnet = new WordNet();
+    var newWords = [];
+    var finalWords = [];
+
+    function read(e) {
+        var textfield = document.getElementById(e);
+        newWords = textfield.value.split(' ').clean('');
+        finalWords = newWords.clone();
+    }
+
+    // native function to clean up an array to take out empty values
+    Array.prototype.clean = function(deleteValue) {
+        for (var i = 0; i < this.length; i++) {
+            if (this[i] == deleteValue) {
+                this.splice(i, 1);
+                i--;
+            }
+        }
+        return this;
+    };
+    // native function to clone the elements of one array into another
+    Array.prototype.clone = function() {
+        return this.slice(0);
+    }
+    </script>
+</head>
+<body>
+    <h1>Cynnamyn</h1>
+    <p><pre>a webpage by Justin Chang</pre></p>
+    <br>
+    <input type="text" name="in" id="in" onkeyup="read('in')" onkeydown="read('in')">
+</body>
+</html>
