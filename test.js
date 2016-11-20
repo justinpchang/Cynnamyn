@@ -160,7 +160,7 @@ function synonymize(word) {
             return deferred.promise;
         }
         //else pass back a random synonym as a success
-        synonym = synonyms[Math.floor(Math.random() * synonyms.length)].replace("_", " ");
+        synonym = synonyms[Math.floor(Math.random() * synonyms.length)].replace("_", " ").replace("-", " ");
         deferred.resolve(synonym);
     });
     return deferred.promise;
