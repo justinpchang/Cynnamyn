@@ -1,5 +1,6 @@
 // Load the http module to create an http server
 var http = require('http');
+var Q = require("q");
 
 // Load the WordNet module for later dictionary lookups
 var WordNet = require('node-wordnet');
@@ -9,6 +10,9 @@ var wordNet = new WordNet();
 var raw = {};
 //array for interpretted words
 var interpretted = {};
+
+var arr = ["hello"];
+synonymize1(arr[0]).then(console.log, console.error);
 
 // Create a function to handle every HTTP request
 function handler(req, res){
@@ -81,6 +85,9 @@ function handler(req, res){
                 };*/
 
                 //populated interpretted using temp array
+
+/* good stuff
+
                 interpretted = new Array(temp.length-1);
                 console.log("temp: " + temp);
                 for(var i = 0; i < temp.length-1; i++) {
@@ -99,6 +106,8 @@ function handler(req, res){
                 };
 
                 var result = interprettedStr;
+
+*/
 
                 /*synonymize(a, function(result) {
                     console.log(result);
@@ -160,4 +169,29 @@ function synonymize(word, callback) {
         synonym = synonyms[Math.floor(Math.random() * synonyms.length)].replace("_", " ");
         callback(synonym);
     });
+};
+
+function synonymize1(word) {
+    var deferred = Q.defer();
+    var synonym = word;
+    var synonyms = new Array();
+    wordNet.lookup(word,/* ERROR FLAG (not working)
+        function() {
+            callback(word);
+        },*/
+        function(results) {
+        results.forEach(function(result) {
+            result.synonyms.forEach(function(synonym) {
+                if(synonym != word) {
+                    synonyms.push(synonym);
+                };
+            });
+        });
+        if(synonyms[0] === undefined) {
+            deferred.reject("No synonyms");
+        }
+        synonym = synonyms[Math.floor(Math.random() * synonyms.length)].replace("_", " ");
+        deferred.resolve(synonym);
+    });
+    return deferred.promise;
 };
