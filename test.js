@@ -1,18 +1,15 @@
 // Load the http module to create an http server
 var http = require('http');
+
+// Load the Q module for promises
 var Q = require("q");
 
 // Load the WordNet module for later dictionary lookups
 var WordNet = require('node-wordnet');
 var wordNet = new WordNet();
 
-//array to hold raw input
-var raw = {};
 //array for interpretted words
 var interpretted = {};
-
-var arr = ["hello"];
-synonymize1(arr[0]).then(console.log, console.error);
 
 // Create a function to handle every HTTP request
 function handler(req, res){
@@ -74,54 +71,46 @@ function handler(req, res){
             var a = chunk.toString();
 
             if(a.substr(a.length-1) === ' ') {
-                //make sure the existing words haven't changed
-                var temp = a.split(" ");
-                /*console.log("Raw: \n" + raw);
-                console.log("Temp: \n" + temp);
+                //get user input
+                var raw = a.split(" ").slice(0, -1);
+
+                //populated interpretted using raw array
+                promisesArr = new Array(raw.length);
+                interpretted = new Array();
+
                 for(var i = 0; i < raw.length; i++) {
-                    if(temp[i] !== raw[i]) {
-                            console.log("SOMETHINGS CHANGED");
-                    };
-                };*/
-
-                //populated interpretted using temp array
-
-/* good stuff
-
-                interpretted = new Array(temp.length-1);
-                console.log("temp: " + temp);
-                for(var i = 0; i < temp.length-1; i++) {
-                    synonymize(temp[i], function(result) {
-                        interpretted[i] = result;
-                        console.log(interpretted[i]);
+                    promisesArr[i] = synonymize(raw[i]);
+                }
+                Q.allSettled(promisesArr).then(function(results) {
+                    results.forEach(function(result) {
+                        if(result.state === "fulfilled") {
+                            interpretted.push(result.value);
+                        } else {
+                            interpretted.push(result.reason);
+                        }
                     });
-                    console.log(interpretted[i]);
-                };
-                console.log("interpretted: " + interpretted);
 
-                //convert interpretted to a printable string
-                var interprettedStr = "";
-                for(word in interpretted) {
-                    interprettedStr = word + " ";
-                };
+                    //convert interpretted to a printable string
+                    var interprettedStr = "";
+                    for(var i = 0; i < interpretted.length; i++) {
+                        interprettedStr += interpretted[i] + " ";
+                    };
+                    var result = interprettedStr;
 
-                var result = interprettedStr;
+                    //fill in the result and form values
+                    form = result.toString();
 
-*/
+                    //update raw
+                    raw = a.split(" ");
 
-                /*synonymize(a, function(result) {
-                    console.log(result);
-                });*/
-                //fill in the result and form values
-                form = result.toString();
-                //update raw
-                raw = a.split(" ");
-                //respond
-                res.setHeader('Content-Type', 'text/html');
-                res.writeHead(200);
-                res.end(form);
+                    //respond
+                    res.setHeader('Content-Type', 'text/html');
+                    res.writeHead(200);
+                    res.end(form);
 
-                //exit
+                    //exit
+                    return;
+                });
                 return;
             };
 
@@ -148,38 +137,16 @@ function handler(req, res){
       };
 });
 
-function synonymize(word, callback) {
-    var synonym = word;
-    var synonyms = new Array();
-    wordNet.lookup(word,/* ERROR FLAG (not working)
-        function() {
-            callback(word);
-        },*/
-        function(results) {
-        results.forEach(function(result) {
-            result.synonyms.forEach(function(synonym) {
-                if(synonym != word) {
-                    synonyms.push(synonym);
-                };
-            });
-        });
-        if(synonyms[0] === undefined) {
-            return;
-        }
-        synonym = synonyms[Math.floor(Math.random() * synonyms.length)].replace("_", " ");
-        callback(synonym);
-    });
-};
-
-function synonymize1(word) {
+function synonymize(word) {
     var deferred = Q.defer();
     var synonym = word;
     var synonyms = new Array();
+    //call lookup method on word
     wordNet.lookup(word,/* ERROR FLAG (not working)
         function() {
             callback(word);
         },*/
-        function(results) {
+    function(results) {
         results.forEach(function(result) {
             result.synonyms.forEach(function(synonym) {
                 if(synonym != word) {
@@ -187,9 +154,12 @@ function synonymize1(word) {
                 };
             });
         });
+        //if there are no synonyms other than the word itself, pass back the word as a failure
         if(synonyms[0] === undefined) {
-            deferred.reject("No synonyms");
+            deferred.reject(word);
+            return deferred.promise;
         }
+        //else pass back a random synonym as a success
         synonym = synonyms[Math.floor(Math.random() * synonyms.length)].replace("_", " ");
         deferred.resolve(synonym);
     });
